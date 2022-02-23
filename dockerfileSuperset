@@ -1,0 +1,93 @@
+FROM apache/superset:1.4.1
+# Switching to root to install the required packages
+USER root
+
+# install database drivers for athena and redshift, refer to https://superset.apache.org/docs/databases/installing-database-drivers
+
+# mysql://<UserName>:<DBPassword>@<Database Host>/<Database Name>
+RUN pip install mysqlclient
+
+# postgresql://<UserName>:<DBPassword>@<Database Host>/<Database Name>
+RUN pip install psycopg2
+
+# awsathena+rest://{aws_access_key_id}:{aws_secret_access_key}@athena.{region_name}.amazonaws.com/{
+RUN pip install "PyAthenaJDBC>1.0.9"
+RUN pip install "PyAthena>1.2.0"
+
+# redshift+psycopg2://<userName>:<DBPassword>@<AWS End Point>:5439/<Database Name>
+RUN pip install sqlalchemy-redshift
+
+# clickhouse://{username}:{password}@{hostname}:{port}/{database}
+# RUN pip install sqlalchemy-clickhouse
+RUN pip install clickhouse-driver==0.2.0 && pip install clickhouse-sqlalchemy==0.1.6
+
+# mssql://
+RUN pip install pymssql
+
+# oracle://
+RUN pip install cx_Oracle
+
+# db2+ibm_db://
+# RUN pip install ibm_db_sa
+
+# elasticsearch+http://{user}:{password}@{host}:9200/
+RUN pip install elasticsearch-dbapi
+
+# bigquery, refer to https://superset.apache.org/docs/databases/bigquery/
+RUN pip install sqlalchemy-bigquery
+
+# install prophet
+# option 1
+# RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
+#     && mkdir /root/.conda \
+#     && bash Miniconda3-latest-Linux-x86_64.sh -b \
+#     && rm -f Miniconda3-latest-Linux-x86_64.sh
+
+# # RUN export PATH="/root/miniconda3/bin:${PATH}"
+# ENV PATH="/root/miniconda3/bin:${PATH}"
+
+# ## all dependances install under ./root/miniconda3/pkgs/fbprophet-0.7.1-py38h950e882_0/lib/python3.8/site-packages/fbprophet/stan_model/prophet_model.pkl and ./root/miniconda3/lib/python3.8/site-packages/fbprophet/stan_model/prophet_model.pkl instead of python /usr/local/lib/python3.7/site-packages/
+
+# RUN /root/miniconda3/bin/conda install -y plotly
+# RUN /root/miniconda3/bin/conda install -c conda-forge fbprophet
+
+# option 2
+# RUN conda install -y pystan
+# RUN pip install fbprophet
+
+# workable option, move to docker_bootstrap.sh instead due compiling issue in docker build
+# RUN pip install plotly
+# RUN pip install pystan==2.18.0.0
+# RUN pip install fbprophet
+
+# workaround for host volume not support in fargate
+# replacement for volume config "- ./docker:/app/docker" in original docker-compose file
+COPY ./docker /app/docker/
+
+# workaround to load dashboard example from s3 bucket instead of github
+COPY ./superset/examples/helpers.py /app/superset/examples/helpers.py
+
+COPY ./superset/examples/configs/datasets/examples/FCC_2018_Survey.yaml /app/superset/examples/configs/datasets/examples/FCC_2018_Survey.yaml
+COPY ./superset/examples/configs/datasets/examples/channel_members.yaml /app/superset/examples/configs/datasets/examples/channel_members.yaml
+COPY ./superset/examples/configs/datasets/examples/channels.yaml /app/superset/examples/configs/datasets/examples/channels.yaml
+COPY ./superset/examples/configs/datasets/examples/cleaned_sales_data.yaml /app/superset/examples/configs/datasets/examples/cleaned_sales_data.yaml
+COPY ./superset/examples/configs/datasets/examples/covid_vaccines.yaml /app/superset/examples/configs/datasets/examples/covid_vaccines.yaml
+COPY ./superset/examples/configs/datasets/examples/exported_stats.yaml /app/superset/examples/configs/datasets/examples/exported_stats.yaml
+COPY ./superset/examples/configs/datasets/examples/messages.yaml /app/superset/examples/configs/datasets/examples/messages.yaml
+COPY ./superset/examples/configs/datasets/examples/threads.yaml /app/superset/examples/configs/datasets/examples/threads.yaml
+COPY ./superset/examples/configs/datasets/examples/unicode_test.test.yaml /app/superset/examples/configs/datasets/examples/unicode_test.test.yaml
+COPY ./superset/examples/configs/datasets/examples/users.yaml /app/superset/examples/configs/datasets/examples/users.yaml
+COPY ./superset/examples/configs/datasets/examples/users_channels.yaml /app/superset/examples/configs/datasets/examples/users_channels.yaml
+COPY ./superset/examples/configs/datasets/examples/video_game_sales.yaml /app/superset/examples/configs/datasets/examples/video_game_sales.yaml
+
+# CACHE_CONFIG and DATA_CACHE_CONFIG
+COPY ./superset/config.py /app/superset/config.py
+
+# more notes for alternatives for volume configure:
+#   - ./superset:/app/superset already included in orignal superset image
+#   - ./superset-frontend:/app/superset-frontend already included in orignal superset image
+#   - superset_home:/app/superset_home external volume in efs
+#   - ./tests:/app/tests obsolete in production usage
+
+# Switching back to using the `superset` user
+USER superset

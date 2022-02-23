@@ -44,6 +44,11 @@ elif [[ "${1}" == "beat" ]]; then
   celery --app=superset.tasks.celery_app:app beat --pidfile /tmp/celerybeat.pid -l INFO -s "${SUPERSET_HOME}"/celerybeat-schedule
 elif [[ "${1}" == "app" ]]; then
   echo "Starting web app..."
+  if [ "$InstallProphet" == "yes" ]; then
+    pip install plotly==4.14.3
+    pip install pystan==2.18.0.0
+    pip install fbprophet==0.7.1
+  fi
   flask run -p 8088 --with-threads --reload --debugger --host=0.0.0.0
 elif [[ "${1}" == "app-gunicorn" ]]; then
   echo "Starting web app..."
