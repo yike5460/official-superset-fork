@@ -99,11 +99,13 @@ describe('VizType control', () => {
     cy.visitChartByName('Daily Totals');
     cy.verifySliceSuccess({ waitAlias: '@tableChartData' });
 
-    cy.get('[data-test="visualization-type"]').contains('Table').click();
+    cy.contains('View all charts').click();
 
-    cy.get('button').contains('Evolution').click(); // change categories
-    cy.get('[role="button"]').contains('Line Chart').click();
-    cy.get('button').contains('Select').click();
+    cy.get('.ant-modal-content').within(() => {
+      cy.get('button').contains('Evolution').click(); // change categories
+      cy.get('[role="button"]').contains('Line Chart').click();
+      cy.get('button').contains('Select').click();
+    });
 
     cy.get('button[data-test="run-query-button"]').click();
     cy.verifySliceSuccess({
@@ -121,16 +123,22 @@ describe('Test datatable', () => {
     cy.visitChartByName('Daily Totals');
   });
   it('Data Pane opens and loads results', () => {
-    cy.get('[data-test="data-tab"]').click();
-    cy.get('[data-test="row-count-label"]').contains('26 rows retrieved');
-    cy.contains('View results');
+    cy.contains('Results').click();
+    cy.get('[data-test="row-count-label"]').contains('26 rows');
     cy.get('.ant-empty-description').should('not.exist');
   });
   it('Datapane loads view samples', () => {
-    cy.get('[data-test="data-tab"]').click();
-    cy.contains('View samples').click();
-    cy.get('[data-test="row-count-label"]').contains('10k rows retrieved');
-    cy.get('.ant-empty-description').should('not.exist');
+    cy.intercept(
+      'datasource/samples?force=false&datasource_type=table&datasource_id=*',
+    ).as('Samples');
+    cy.contains('Samples')
+      .click()
+      .then(() => {
+        cy.wait('@Samples');
+        cy.get('.ant-tabs-tab-active').contains('Samples');
+        cy.get('[data-test="row-count-label"]').contains('1k rows');
+        cy.get('.ant-empty-description').should('not.exist');
+      });
   });
 });
 
@@ -148,7 +156,7 @@ describe('Time range filter', () => {
       metrics: [NUM_METRIC],
     };
 
-    cy.visitChartByParams(JSON.stringify(formData));
+    cy.visitChartByParams(formData);
     cy.verifySliceSuccess({ waitAlias: '@chartData' });
 
     cy.get('[data-test=time-range-trigger]')
@@ -172,7 +180,7 @@ describe('Time range filter', () => {
       time_range: 'Last year',
     };
 
-    cy.visitChartByParams(JSON.stringify(formData));
+    cy.visitChartByParams(formData);
     cy.verifySliceSuccess({ waitAlias: '@chartData' });
 
     cy.get('[data-test=time-range-trigger]')
@@ -192,7 +200,7 @@ describe('Time range filter', () => {
       time_range: 'previous calendar month',
     };
 
-    cy.visitChartByParams(JSON.stringify(formData));
+    cy.visitChartByParams(formData);
     cy.verifySliceSuccess({ waitAlias: '@chartData' });
 
     cy.get('[data-test=time-range-trigger]')
@@ -212,7 +220,7 @@ describe('Time range filter', () => {
       time_range: 'DATEADD(DATETIME("today"), -7, day) : today',
     };
 
-    cy.visitChartByParams(JSON.stringify(formData));
+    cy.visitChartByParams(formData);
     cy.verifySliceSuccess({ waitAlias: '@chartData' });
 
     cy.get('[data-test=time-range-trigger]')
@@ -235,7 +243,7 @@ describe('Time range filter', () => {
       time_range: 'No filter',
     };
 
-    cy.visitChartByParams(JSON.stringify(formData));
+    cy.visitChartByParams(formData);
     cy.verifySliceSuccess({ waitAlias: '@chartData' });
 
     cy.get('[data-test=time-range-trigger]')
@@ -255,10 +263,13 @@ describe('Groupby control', () => {
     cy.visitChartByName('Num Births Trend');
     cy.verifySliceSuccess({ waitAlias: '@chartData' });
 
-    cy.get('[data-test=groupby]').within(() => {
-      cy.get('.ant-select').click();
-      cy.get('input[type=search]').type('state{enter}');
-    });
+    cy.get('[data-test=groupby]')
+      .contains('Drop columns here or click')
+      .click();
+    cy.get('[id="adhoc-metric-edit-tabs-tab-simple"]').click();
+    cy.get('input[aria-label="Column"]').click().type('state{enter}');
+    cy.get('[data-test="ColumnEdit#save"]').contains('Save').click();
+
     cy.get('button[data-test="run-query-button"]').click();
     cy.verifySliceSuccess({ waitAlias: '@chartData', chartSelector: 'svg' });
   });

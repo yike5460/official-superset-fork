@@ -24,9 +24,10 @@ from apispec import APISpec
 from apispec.ext.marshmallow import MarshmallowPlugin
 from flask_babel import gettext as __
 from marshmallow import fields, Schema
-from sqlalchemy.engine.url import make_url, URL
+from sqlalchemy.engine.url import URL
 from typing_extensions import TypedDict
 
+from superset.databases.utils import make_url_safe
 from superset.db_engine_specs.postgres import PostgresBaseEngineSpec
 from superset.errors import ErrorLevel, SupersetError, SupersetErrorType
 from superset.models.sql_lab import Query
@@ -113,13 +114,15 @@ class SnowflakeEngineSpec(PostgresBaseEngineSpec):
     @classmethod
     def adjust_database_uri(
         cls, uri: URL, selected_schema: Optional[str] = None
-    ) -> None:
+    ) -> URL:
         database = uri.database
         if "/" in uri.database:
             database = uri.database.split("/")[0]
         if selected_schema:
             selected_schema = parse.quote(selected_schema, safe="")
-            uri.database = database + "/" + selected_schema
+            uri = uri.set(database=f"{database}/{selected_schema}")
+
+        return uri
 
     @classmethod
     def epoch_to_dttm(cls) -> str:
@@ -220,7 +223,7 @@ class SnowflakeEngineSpec(PostgresBaseEngineSpec):
             Dict[str, str]
         ] = None,
     ) -> Any:
-        url = make_url(uri)
+        url = make_url_safe(uri)
         query = dict(url.query.items())
         return {
             "username": url.username,

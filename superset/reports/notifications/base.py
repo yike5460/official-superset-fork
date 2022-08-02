@@ -20,7 +20,7 @@ from typing import Any, List, Optional, Type
 
 import pandas as pd
 
-from superset.models.reports import ReportRecipients, ReportRecipientType
+from superset.reports.models import ReportRecipients, ReportRecipientType
 
 
 @dataclass
@@ -50,7 +50,7 @@ class BaseNotification:  # pylint: disable=too-few-public-methods
     """
 
     def __init_subclass__(cls, *args: Any, **kwargs: Any) -> None:
-        super().__init_subclass__(*args, **kwargs)  # type: ignore
+        super().__init_subclass__(*args, **kwargs)
         cls.plugins.append(cls)
 
     def __init__(
