@@ -1,4 +1,4 @@
-FROM node:14
+FROM node:16.16.0@sha256:a9c47f97951cd63e32e67df3bca896598dd73e5199084a59efd6019f0dd007fe
 RUN set -e
 
 # workaround for host volume not support in fargate

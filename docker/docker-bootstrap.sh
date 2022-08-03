@@ -44,8 +44,9 @@ elif [[ "${1}" == "beat" ]]; then
 elif [[ "${1}" == "app" ]]; then
   echo "Starting web app..."
   if [ "$InstallProphet" == "yes" ]; then
+    # install specific dependent package for fbprophet, since modules imported by fbprophet had been completely re-write, refer to https://pystan.readthedocs.io/en/latest/upgrading.html#upgrading
     pip install plotly==4.14.3
-    pip install pystan==2.18.0.0
+    pip install pystan==2.19.0.0
     pip install fbprophet==0.7.1
   fi
   flask run -p 8088 --with-threads --reload --debugger --host=0.0.0.0
