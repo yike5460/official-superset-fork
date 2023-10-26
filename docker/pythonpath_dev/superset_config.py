@@ -41,6 +41,16 @@ EXAMPLES_HOST = os.getenv("EXAMPLES_HOST")
 EXAMPLES_PORT = os.getenv("EXAMPLES_PORT")
 EXAMPLES_DB = os.getenv("EXAMPLES_DB")
 
+# Flask App Builder configuration
+# Your App secret key will be used for securely signing the session cookie
+# and encrypting sensitive information on the database
+# Make sure you are changing this key for your deployment with a strong key.
+# Alternatively you can set it with `SUPERSET_SECRET_KEY` environment variable.
+# You MUST set this for production environments or the server will not refuse
+# to start and you will see an error in the logs accordingly.
+# SECRET_KEY = 'YOUR_OWN_RANDOM_GENERATED_SECRET_KEY'
+SECRET_KEY = os.getenv("SECRET_KEY")
+
 # The SQLAlchemy connection string.
 SQLALCHEMY_DATABASE_URI = (
     f"{DATABASE_DIALECT}://"
@@ -92,7 +102,7 @@ class CeleryConfig:
     imports = ("superset.sql_lab",)
     result_backend = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_RESULTS_DB}"
     # CELERY_RESULT_BACKEND = f"redis://supersetdefault-001.kuxqrz.0001.cnn1.cache.amazonaws.com.cn:6379/{REDIS_RESULTS_DB}"
-    CELERYD_LOG_LEVEL = "DEBUG"
+    # CELERYD_LOG_LEVEL = "DEBUG"
     worker_prefetch_multiplier = 1
     task_acks_late = False
     beat_schedule = {
@@ -105,8 +115,8 @@ class CeleryConfig:
             "schedule": crontab(minute=10, hour=0),
         },
     }
-    CELERY_ANNOTATIONS = {"tasks.add": {"rate_limit": "10/s"}}
-    CELERY_TASK_PROTOCOL = 1
+    # task_annotations = {"tasks.add": {"rate_limit": "10/s"}}
+    # task_protocol = 1
 
 CELERY_CONFIG = CeleryConfig
 

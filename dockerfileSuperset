@@ -1,4 +1,4 @@
-FROM apache/superset:2.0.0@sha256:ca32ff641daca7447edfe78345e1abbc3b278895b1d4a245e69e28020e3310b7
+FROM apache/superset:3.0.0@sha256:957cd5b2165cb95c6d873eaaf18ca6702aa41b9d5c7ebb8041714530df8842b0
 
 # Switching to root to install the required packages
 USER root
@@ -18,9 +18,13 @@ RUN pip install "PyAthena>1.2.0"
 # redshift+psycopg2://<userName>:<DBPassword>@<AWS End Point>:5439/<Database Name>
 RUN pip install sqlalchemy-redshift
 
-# clickhouse://{username}:{password}@{hostname}:{port}/{database}
+# clickhousedb://{username}:{password}@{hostname}:{port}/{database}
 # RUN pip install sqlalchemy-clickhouse
-RUN pip install clickhouse-driver==0.2.0 && pip install clickhouse-sqlalchemy==0.1.6
+### RUN pip install clickhouse-driver==0.2.0 && pip install clickhouse-sqlalchemy==0.1.6
+RUN pip install clickhouse-connect
+
+#dynamodb://{access_key_id}:{secret_access_key}@dynamodb.{region_name}.amazonaws.com?connector=superset
+RUN pip install pydynamodb
 
 # mssql://
 RUN pip install pymssql
@@ -60,6 +64,10 @@ RUN pip install sqlalchemy-bigquery
 # RUN pip install plotly
 # RUN pip install pystan==2.18.0.0
 # RUN pip install fbprophet
+
+# install marshmallow-sqlalchemy
+# Run pip uninstall -y marshmallow-sqlalchemy
+# Run pip install marshmallow-sqlalchemy==0.23.1 
 
 # workaround for host volume not support in fargate
 # replacement for volume config "- ./docker:/app/docker" in original docker-compose file
