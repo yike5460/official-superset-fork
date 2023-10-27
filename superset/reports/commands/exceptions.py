@@ -14,16 +14,17 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+
 from flask_babel import lazy_gettext as _
 
 from superset.commands.exceptions import (
     CommandException,
     CommandInvalidError,
     CreateFailedError,
-    DeleteFailedError,
     ForbiddenError,
     ValidationError,
 )
+from superset.exceptions import SupersetError, SupersetErrorsException
 from superset.reports.models import ReportScheduleType
 
 
@@ -74,7 +75,7 @@ class ReportScheduleRequiredTypeValidationError(ValidationError):
 
 class ReportScheduleOnlyChartOrDashboardError(ValidationError):
     """
-    Marshmallow validation error for report schedule accept exlusive chart or dashboard
+    Marshmallow validation error for report schedule accept exclusive chart or dashboard
     """
 
     def __init__(self) -> None:
@@ -119,11 +120,8 @@ class DashboardNotSavedValidationError(ValidationError):
 
 
 class ReportScheduleInvalidError(CommandInvalidError):
+    status = 422
     message = _("Report Schedule parameters are invalid.")
-
-
-class ReportScheduleBulkDeleteFailedError(DeleteFailedError):
-    message = _("Report Schedule could not be deleted.")
 
 
 class ReportScheduleCreateFailedError(CreateFailedError):
@@ -135,6 +133,7 @@ class ReportScheduleUpdateFailedError(CreateFailedError):
 
 
 class ReportScheduleNotFoundError(CommandException):
+    status = 404
     message = _("Report Schedule not found.")
 
 
@@ -163,10 +162,12 @@ class ReportScheduleExecuteUnexpectedError(CommandException):
 
 
 class ReportSchedulePreviousWorkingError(CommandException):
+    status = 429
     message = _("Report Schedule is still working, refusing to re-compute.")
 
 
 class ReportScheduleWorkingTimeoutError(CommandException):
+    status = 408
     message = _("Report Schedule reached a working timeout.")
 
 
@@ -188,61 +189,82 @@ class ReportScheduleCreationMethodUniquenessValidationError(CommandException):
 
 
 class AlertQueryMultipleRowsError(CommandException):
-
+    status = 422
     message = _("Alert query returned more than one row.")
 
 
 class AlertValidatorConfigError(CommandException):
-
+    status = 422
     message = _("Alert validator config error.")
 
 
 class AlertQueryMultipleColumnsError(CommandException):
+    status = 422
     message = _("Alert query returned more than one column.")
 
 
 class AlertQueryInvalidTypeError(CommandException):
+    status = 422
     message = _("Alert query returned a non-number value.")
 
 
 class AlertQueryError(CommandException):
+    """
+    SQL query is not valid
+    """
+
+    status = 400
     message = _("Alert found an error while executing a query.")
 
 
 class AlertQueryTimeout(CommandException):
+    status = 408
     message = _("A timeout occurred while executing the query.")
 
 
 class ReportScheduleScreenshotTimeout(CommandException):
+    status = 408
     message = _("A timeout occurred while taking a screenshot.")
 
 
 class ReportScheduleCsvTimeout(CommandException):
+    status = 408
     message = _("A timeout occurred while generating a csv.")
 
 
 class ReportScheduleDataFrameTimeout(CommandException):
+    status = 408
     message = _("A timeout occurred while generating a dataframe.")
 
 
 class ReportScheduleAlertGracePeriodError(CommandException):
+    status = 429
     message = _("Alert fired during grace period.")
 
 
 class ReportScheduleAlertEndGracePeriodError(CommandException):
+    status = 429
     message = _("Alert ended grace period.")
 
 
 class ReportScheduleNotificationError(CommandException):
+    status = 429
     message = _("Alert on grace period")
-
-
-class ReportScheduleSelleniumUserNotFoundError(CommandException):
-    message = _("Report Schedule sellenium user not found")
 
 
 class ReportScheduleStateNotFoundError(CommandException):
     message = _("Report Schedule state not found")
+
+
+class ReportScheduleSystemErrorsException(CommandException, SupersetErrorsException):
+    errors: list[SupersetError] = []
+    message = _("Report schedule system error")
+
+
+class ReportScheduleClientErrorsException(CommandException, SupersetErrorsException):
+    status = 400
+    errors: list[SupersetError] = []
+    message = _("Report schedule client error")
 
 
 class ReportScheduleUnexpectedError(CommandException):
@@ -250,6 +272,7 @@ class ReportScheduleUnexpectedError(CommandException):
 
 
 class ReportScheduleForbiddenError(ForbiddenError):
+    status = 403
     message = _("Changing this report is forbidden")
 
 

@@ -24,13 +24,14 @@ if [ "$CYPRESS_CONFIG" == "true" ]; then
     export SUPERSET_CONFIG=tests.integration_tests.superset_test_config
     export SUPERSET_TESTENV=true
     export SUPERSET__SQLALCHEMY_DATABASE_URI=postgresql+psycopg2://superset:superset@db:5432/superset
+    export SUPERSET__SQLALCHEMY_EXAMPLES_URI=postgresql+psycopg2://examples:examples@db:5432/examples
 fi
 #
 # Make sure we have dev requirements installed
 #
 if [ -f "${REQUIREMENTS_LOCAL}" ]; then
   echo "Installing local overrides at ${REQUIREMENTS_LOCAL}"
-  pip install -r "${REQUIREMENTS_LOCAL}"
+  pip install --no-cache-dir -r "${REQUIREMENTS_LOCAL}"
 else
   echo "Skipping local overrides"
 fi
@@ -40,9 +41,10 @@ if [[ "${1}" == "worker" ]]; then
   celery --app=superset.tasks.celery_app:app worker -Ofair -l INFO
 elif [[ "${1}" == "beat" ]]; then
   echo "Starting Celery beat..."
+  rm -f /tmp/celerybeat.pid
   celery --app=superset.tasks.celery_app:app beat --pidfile /tmp/celerybeat.pid -l INFO -s "${SUPERSET_HOME}"/celerybeat-schedule
 elif [[ "${1}" == "app" ]]; then
-  echo "Starting web app..."
+  echo "Starting web app (using development server)..."
   if [ "$InstallProphet" == "yes" ]; then
     # install specific dependent package for fbprophet, since modules imported by fbprophet had been completely re-write, refer to https://pystan.readthedocs.io/en/latest/upgrading.html#upgrading
     pip install plotly==4.14.3
@@ -53,4 +55,6 @@ elif [[ "${1}" == "app" ]]; then
 elif [[ "${1}" == "app-gunicorn" ]]; then
   echo "Starting web app..."
   /usr/bin/run-server.sh
+else
+  echo "Unknown Operation!!!"
 fi

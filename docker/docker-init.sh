@@ -44,6 +44,7 @@ if [ "$CYPRESS_CONFIG" == "true" ]; then
     export SUPERSET_CONFIG=tests.integration_tests.superset_test_config
     export SUPERSET_TESTENV=true
     export SUPERSET__SQLALCHEMY_DATABASE_URI=postgresql+psycopg2://superset:superset@db:5432/superset
+    export SUPERSET__SQLALCHEMY_EXAMPLES_URI=postgresql+psycopg2://examples:examples@db:5432/examples
 fi
 # Initialize the database
 echo_step "1" "Starting" "Applying DB migrations"
@@ -58,6 +59,7 @@ superset fab create-admin \
               --lastname Admin \
               --email admin@superset.com \
               --password $ADMIN_PASSWORD
+            
 
 echo_step "2" "Starting" "Setting up developer user ( $SUPERSET_USER / $SUPERSET_PASSWORD )"
 superset fab create-admin \
@@ -81,7 +83,7 @@ if [ "$SUPERSET_LOAD_EXAMPLES" = "yes" ]; then
         superset load_test_users
         superset load_examples --load-test-data
     else
-        superset load_examples
+        superset load_examples --force
     fi
     echo_step "4" "Complete" "Loading examples"
 fi
